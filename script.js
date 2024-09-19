@@ -1,3 +1,5 @@
+console.log('Script started');
+
 // 模拟数据存储
 let memories = [];
 
@@ -16,8 +18,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+console.log('Firebase initialized');
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM content loaded');
+    
+    // 在loadMemories()调用之前添加
+    console.log('Loading memories...');
+
     loadMemories();
+
     console.log('Loaded memories:', memories); // 调试信息
 
     const createMemoryLink = document.getElementById('createMemoryLink');
@@ -113,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('记忆碎片创建成功！');
             }).catch((error) => {
                 console.error("Error saving memory: ", error);
-                alert('保存记忆碎片时出错，请重试��');
+                alert('保存记忆碎片时出错，请重试');
             });
         }
     }
@@ -156,9 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadMemories() {
+        console.log('loadMemories function called');
         db.collection("memories").get().then((querySnapshot) => {
+            console.log('Firestore query successful');
             memories = [];
             querySnapshot.forEach((doc) => {
+                console.log('Processing document:', doc.id);
                 memories.push({...doc.data(), id: doc.id});
             });
             console.log('Memories loaded from Firestore:', memories);
@@ -169,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveMemories(newMemory) {
+        console.log('Saving new memory:', newMemory);
         return db.collection("memories").add(newMemory)
             .then((docRef) => {
                 console.log("Memory saved with ID: ", docRef.id);
