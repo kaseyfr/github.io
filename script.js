@@ -1,6 +1,21 @@
 // 模拟数据存储
 let memories = [];
 
+// Firebase 配置
+const firebaseConfig = {
+    apiKey: "AIzaSyDxnIjnZvy_yM_PtXMZcWNLP0EdH-16Y5w",
+    authDomain: "memoryfragments-556a5.firebaseapp.com",
+    projectId: "memoryfragments-556a5",
+    storageBucket: "memoryfragments-556a5.appspot.com",
+    messagingSenderId: "64434542773",
+    appId: "1:64434542773:web:17b33527ac11c6ce7306fc",
+    measurementId: "G-G6533QNGXF"
+};
+
+// 初始化 Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 document.addEventListener('DOMContentLoaded', () => {
     // 加载保存的数据
     loadMemories();
@@ -19,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         showMemoryList();
     });
+
+    // 初始显示记忆碎片列表
+    showMemoryList();
 
     function showCreateMemoryForm() {
         mainContent.innerHTML = `
@@ -88,11 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function saveMemory() {
-            memories.push({ title, tag, description, images: imageDataUrls });
+            const newMemory = { title, tag, description, images: imageDataUrls };
+            memories.push(newMemory);
             saveMemories();
-            console.log('Memory saved:', { title, tag, description, imageCount: imageDataUrls.length }); // 调试信息
-            alert('记忆碎片已创建！');
+            console.log('Memory saved:', newMemory);
             showMemoryList();
+            alert('记忆碎片创建成功！');
         }
     }
 
@@ -120,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>标签：${memory.tag}</p>
             <p>${memory.description}</p>
             <div id="imageGallery"></div>
+            <button onclick="showMemoryList()">返回列表</button>
         `;
 
         const imageGallery = document.getElementById('imageGallery');
@@ -129,17 +149,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadMemories() {
-        const savedMemories = localStorage.getItem('memories');
-        if (savedMemories) {
-            memories = JSON.parse(savedMemories);
-            console.log('Memories loaded from localStorage'); // 调试信息
-        } else {
-            console.log('No memories found in localStorage'); // 调试信息
-        }
+        db.collection("memories").get().then((querySnapshot) => {
+            memories = [];
+            querySnapshot.forEach((doc) => {
+                memories.push(doc.data());
+            });
+            showMemoryList();
+            console.log('Memories loaded from Firestore');
+        });
     }
 
     function saveMemories() {
-        localStorage.setItem('memories', JSON.stringify(memories));
-        console.log('Memories saved to localStorage'); // 调试信息
+        // 每次保存新的记忆碎片
+        const newMemory = memories[memories.length - 1];
+        db.collection("memories").add(newMemory)
+            .then((docRef) => {
+                console.log("Memory saved with ID: ", docRef.id);
+            })
+            .catch((error) => {
+                console.error("Error adding memory: ", error);
+            });
     }
 });
