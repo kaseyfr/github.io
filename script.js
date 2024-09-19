@@ -17,7 +17,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 加载保存的数据
     loadMemories();
     console.log('Loaded memories:', memories); // 调试信息
 
@@ -107,33 +106,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function saveMemory() {
             const newMemory = { title, tag, description, images: imageDataUrls };
-            memories.push(newMemory);
-            saveMemories();
-            console.log('Memory saved:', newMemory);
-            showMemoryList();
-            alert('记忆碎片创建成功！');
+            saveMemories(newMemory).then((id) => {
+                memories.push({...newMemory, id});
+                console.log('Memory saved:', newMemory);
+                showMemoryList();
+                alert('记忆碎片创建成功！');
+            }).catch((error) => {
+                console.error("Error saving memory: ", error);
+                alert('保存记忆碎片时出错，请重试��');
+            });
         }
     }
 
     function showMemoryList() {
-        console.log('Showing memory list, count:', memories.length); // 调试信息
+        console.log('Showing memory list, count:', memories.length);
         let memoryListHTML = '<h2>记忆碎片列表</h2>';
-        memories.forEach((memory, index) => {
+        memories.forEach((memory) => {
             const firstImage = memory.images[0] || 'placeholder.jpg';
             memoryListHTML += `
                 <div class="memory-preview">
                     <h3>${memory.title}</h3>
                     <p>标签：${memory.tag}</p>
                     <img src="${firstImage}" alt="记忆图片" style="max-width: 100px; max-height: 100px;">
-                    <button onclick="showMemoryDetails(${index})">查看详情</button>
+                    <button onclick="showMemoryDetails('${memory.id}')">查看详情</button>
                 </div>
             `;
         });
         mainContent.innerHTML = memoryListHTML;
     }
 
-    window.showMemoryDetails = function(index) {
-        const memory = memories[index];
+    window.showMemoryDetails = function(id) {
+        const memory = memories.find(m => m.id === id);
+        if (!memory) {
+            console.error('Memory not found:', id);
+            return;
+        }
         mainContent.innerHTML = `
             <h2>${memory.title}</h2>
             <p>标签：${memory.tag}</p>
@@ -152,22 +159,24 @@ document.addEventListener('DOMContentLoaded', () => {
         db.collection("memories").get().then((querySnapshot) => {
             memories = [];
             querySnapshot.forEach((doc) => {
-                memories.push(doc.data());
+                memories.push({...doc.data(), id: doc.id});
             });
+            console.log('Memories loaded from Firestore:', memories);
             showMemoryList();
-            console.log('Memories loaded from Firestore');
+        }).catch((error) => {
+            console.error("Error loading memories: ", error);
         });
     }
 
-    function saveMemories() {
-        // 每次保存新的记忆碎片
-        const newMemory = memories[memories.length - 1];
-        db.collection("memories").add(newMemory)
+    function saveMemories(newMemory) {
+        return db.collection("memories").add(newMemory)
             .then((docRef) => {
                 console.log("Memory saved with ID: ", docRef.id);
+                return docRef.id;
             })
             .catch((error) => {
                 console.error("Error adding memory: ", error);
+                throw error;
             });
     }
 });
