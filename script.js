@@ -1,7 +1,11 @@
 // 模拟数据存储
-let memories = JSON.parse(localStorage.getItem('memories')) || [];
+let memories = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 加载保存的数据
+    loadMemories();
+    console.log('Loaded memories:', memories); // 调试信息
+
     const createMemoryLink = document.getElementById('createMemoryLink');
     const viewMemoriesLink = document.getElementById('viewMemoriesLink');
     const mainContent = document.getElementById('mainContent');
@@ -34,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function previewImages(event) {
+        console.log('Preview images function called'); // 调试信息
         const imagePreview = document.getElementById('imagePreview');
         imagePreview.innerHTML = '';
         const files = event.target.files;
@@ -49,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     img.style.maxHeight = '100px';
                     img.style.margin = '5px';
                     imagePreview.appendChild(img);
+                    console.log('Image preview added'); // 调试信息
                 }
                 reader.readAsDataURL(file);
             }
@@ -65,27 +71,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageDataUrls = [];
         let loadedImages = 0;
 
-        for (let i = 0; i < images.length; i++) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imageDataUrls.push(e.target.result);
-                loadedImages++;
-                if (loadedImages === images.length) {
-                    saveMemory();
+        if (images.length === 0) {
+            saveMemory(); // 如果没有图片，直接保存
+        } else {
+            for (let i = 0; i < images.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageDataUrls.push(e.target.result);
+                    loadedImages++;
+                    if (loadedImages === images.length) {
+                        saveMemory();
+                    }
                 }
+                reader.readAsDataURL(images[i]);
             }
-            reader.readAsDataURL(images[i]);
         }
 
         function saveMemory() {
             memories.push({ title, tag, description, images: imageDataUrls });
-            localStorage.setItem('memories', JSON.stringify(memories));
+            saveMemories();
+            console.log('Memory saved:', { title, tag, description, imageCount: imageDataUrls.length }); // 调试信息
             alert('记忆碎片已创建！');
             showMemoryList();
         }
     }
 
     function showMemoryList() {
+        console.log('Showing memory list, count:', memories.length); // 调试信息
         let memoryListHTML = '<h2>记忆碎片列表</h2>';
         memories.forEach((memory, index) => {
             const firstImage = memory.images[0] || 'placeholder.jpg';
@@ -114,5 +126,20 @@ document.addEventListener('DOMContentLoaded', () => {
         memory.images.forEach(imageDataUrl => {
             imageGallery.innerHTML += `<img src="${imageDataUrl}" alt="记忆图片" style="max-width: 200px; max-height: 200px; margin: 5px;">`;
         });
+    }
+
+    function loadMemories() {
+        const savedMemories = localStorage.getItem('memories');
+        if (savedMemories) {
+            memories = JSON.parse(savedMemories);
+            console.log('Memories loaded from localStorage'); // 调试信息
+        } else {
+            console.log('No memories found in localStorage'); // 调试信息
+        }
+    }
+
+    function saveMemories() {
+        localStorage.setItem('memories', JSON.stringify(memories));
+        console.log('Memories saved to localStorage'); // 调试信息
     }
 });
