@@ -28,23 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initializeFirebase();
 
-    const loginForm = document.getElementById('loginForm');
-    const loginButton = document.getElementById('loginButton');
-    const app = document.getElementById('app');
-
-    loginButton.addEventListener('click', () => {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        
-        if (username === 'Kasey' && password === '0824') {
-            loginForm.style.display = 'none';
-            app.style.display = 'block';
-            loadMemories();
-        } else {
-            alert('用户名或密码错误');
-        }
-    });
-
     // 在loadMemories()调用之前添加
     console.log('Loading memories...');
 
