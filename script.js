@@ -14,14 +14,19 @@ const firebaseConfig = {
     measurementId: "G-G6533QNGXF"
 };
 
-// 初始化 Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let db;
 
-console.log('Firebase initialized');
+function initializeFirebase() {
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log('Firebase initialized');
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM content loaded');
+    
+    initializeFirebase();
     
     // 在loadMemories()调用之前添加
     console.log('Loading memories...');
